@@ -243,6 +243,10 @@ def test_lessthan_escaping(text, expected):
         ("&#123;", "&#123;"),
         ("&#x0007b;", "&#x0007b;"),
         ("&#x0007B;", "&#x0007B;"),
+        # Invalid digit between value and ';' must not drop that digit
+        ("&#12G;", "&amp;#12G;"),
+        ("&#x1G;", "&amp;#x1G;"),
+        ("hello &#66G; world", "hello &amp;#66G; world"),
         # Test non-numeric entities
         ("&#", "&amp;#"),
         ("&#<", "&amp;#&lt;"),

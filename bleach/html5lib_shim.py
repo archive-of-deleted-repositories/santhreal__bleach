@@ -575,6 +575,9 @@ def convert_entity(value):
         doesn't match a character entity
 
     """
+    if not value:
+        return None
+
     if value[0] == "#":
         if len(value) < 2:
             return None
@@ -589,7 +592,10 @@ def convert_entity(value):
         if int_as_string == "":
             return None
 
-        code_point = int(int_as_string, base)
+        try:
+            code_point = int(int_as_string, base)
+        except ValueError:
+            return None
         if 0 < code_point < 0x110000:
             return chr(code_point)
         else:
@@ -666,13 +672,12 @@ def match_entity(stream):
         else:
             allowed = "0123456789"
 
-        # FIXME(willkg): Do we want to make sure these are valid number
-        # entities? This doesn't do that currently.
+        # Only consume valid digits. An invalid digit must stay in the stream
+        # so "&" + entity + ";" slicing by callers does not drop it.
         while stream and stream[0] not in end_characters:
-            c = stream.pop(0)
-            if c not in allowed:
+            if stream[0] not in allowed:
                 break
-            possible_entity += c
+            possible_entity += stream.pop(0)
 
         if possible_entity and stream and stream[0] == ";":
             return possible_entity

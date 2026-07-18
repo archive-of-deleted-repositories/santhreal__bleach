@@ -27,10 +27,47 @@ from bleach import html5lib_shim
         # Handles negative unicode points
         ("&#-1;", "&#-1;"),
         ("&#x-1;", "&#x-1;"),
+        # Invalid digit between value and ';' is not an entity; keep all chars
+        ("&#12G;", "&#12G;"),
+        ("&#x1G;", "&#x1G;"),
+        ("a&#66G;b", "a&#66G;b"),
+        ("hello &#x20G; world", "hello &#x20G; world"),
     ],
 )
 def test_convert_entities(data, expected):
     assert html5lib_shim.convert_entities(data) == expected
+
+
+@pytest.mark.parametrize(
+    "value, expected",
+    [
+        ("", None),
+        ("#", None),
+        ("#x", None),
+        ("#xG", None),
+        ("#G", None),
+        ("#12", "\x0c"),
+        ("#x41", "A"),
+        ("amp", "&"),
+    ],
+)
+def test_convert_entity(value, expected):
+    assert html5lib_shim.convert_entity(value) == expected
+
+
+@pytest.mark.parametrize(
+    "data, expected",
+    [
+        ("&#12;", "#12"),
+        ("&#x41;", "#x41"),
+        ("&#12G;", None),
+        ("&#x1G;", None),
+        ("&#xG;", None),
+        ("&amp;", "amp"),
+    ],
+)
+def test_match_entity(data, expected):
+    assert html5lib_shim.match_entity(data) == expected
 
 
 @pytest.mark.parametrize(
